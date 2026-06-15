@@ -1,0 +1,23 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(cd /d D:\\\\BotLeague)",
+      "Bash(Get-ChildItem -Path \".\\\\Botleague-Frontend\\\\src\\\\feature\\\\\" -Recurse -Directory | Select-Object FullName)",
+      "Bash(mvn compile *)",
+      "Bash(npx tsc *)",
+      "PowerShell(New-Item -ItemType Directory -Force -Path \"d:\\\\BotLeague\\\\botleague-backend\\\\src\\\\main\\\\java\\\\com\\\\botleague\\\\backend\\\\notification\\\\enums\")",
+      "PowerShell(New-Item -ItemType Directory -Force -Path \"d:\\\\BotLeague\\\\botleague-backend\\\\src\\\\main\\\\java\\\\com\\\\botleague\\\\backend\\\\notification\\\\entity\")",
+      "PowerShell(New-Item -ItemType Directory -Force -Path \"d:\\\\BotLeague\\\\botleague-backend\\\\src\\\\main\\\\java\\\\com\\\\botleague\\\\backend\\\\notification\\\\repository\")",
+      "PowerShell(New-Item -ItemType Directory -Force -Path \"d:\\\\BotLeague\\\\botleague-backend\\\\src\\\\main\\\\java\\\\com\\\\botleague\\\\backend\\\\notification\\\\dto\")",
+      "PowerShell(New-Item -ItemType Directory -Force -Path \"d:\\\\BotLeague\\\\botleague-backend\\\\src\\\\main\\\\java\\\\com\\\\botleague\\\\backend\\\\notification\\\\service\")",
+      "PowerShell(New-Item -ItemType Directory -Force -Path \"d:\\\\BotLeague\\\\botleague-backend\\\\src\\\\main\\\\java\\\\com\\\\botleague\\\\backend\\\\notification\\\\controller\")",
+      "PowerShell(New-Item -ItemType Directory -Force -Path \"d:\\\\BotLeague\\\\Botleague-Frontend\\\\src\\\\feature\\\\Notifications\\\\api\")",
+      "PowerShell(New-Item -ItemType Directory -Force -Path \"d:\\\\BotLeague\\\\Botleague-Frontend\\\\src\\\\feature\\\\Notifications\\\\store\")",
+      "PowerShell(New-Item -ItemType Directory -Force -Path \"d:\\\\BotLeague\\\\Botleague-Frontend\\\\src\\\\feature\\\\Notifications\\\\pages\")",
+      "Bash(psql -U postgres -d BotLeague_Test -c \"ALTER TABLE chat_messages ADD COLUMN IF NOT EXISTS is_system BOOLEAN NOT NULL DEFAULT FALSE; ALTER TABLE chat_participants ADD COLUMN IF NOT EXISTS last_read_at TIMESTAMP;\")",
+      "PowerShell(cd d:\\\\BotLeague\\\\botleague-backend; $env:MAVEN_OPTS=\"-Xmx512m -Xms128m\"; mvn compile -q 2>&1 | Select-Object -Last 30)",
+      "Bash(xargs grep -l \"localStorage\\\\|sessionStorage\\\\|Authorization\")",
+      "PowerShell($env:MAVEN_OPTS=\"-Xmx512m -Xms128m\"; cd \"d:\\\\BotLeague\\\\botleague-backend\"; mvn compile -q 2>&1 | Select-Object -Last 40)"
+    ]
+  }
+}

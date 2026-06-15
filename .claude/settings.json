@@ -1,0 +1,23 @@
+{
+  "permissions": {
+    "allow": [
+      "PowerShell($env:PGPASSWORD = \"admin123\"; & \"C:\\\\Program Files\\\\PostgreSQL\\\\17\\\\bin\\\\psql.exe\" -U postgres -d BotLeague_Test -c \"ALTER TABLE chat_messages ADD COLUMN IF NOT EXISTS is_system BOOLEAN NOT NULL DEFAULT FALSE; ALTER TABLE chat_participants ADD COLUMN IF NOT EXISTS last_read_at TIMESTAMP;\" 2>&1)",
+      "Read(//c/Program Files/PostgreSQL/**)",
+      "PowerShell($env:PGPASSWORD = \"admin123\"; & \"C:\\\\Program Files\\\\PostgreSQL\\\\18\\\\bin\\\\psql.exe\" -U postgres -d BotLeague_Test -c \"ALTER TABLE chat_messages ADD COLUMN IF NOT EXISTS is_system BOOLEAN NOT NULL DEFAULT FALSE; ALTER TABLE chat_participants ADD COLUMN IF NOT EXISTS last_read_at TIMESTAMP;\" 2>&1)",
+      "PowerShell($env:PGPASSWORD = \"admin123\"; & \"C:\\\\Program Files\\\\PostgreSQL\\\\18\\\\bin\\\\psql.exe\" -U postgres -d BotLeague_Test -c \"SELECT pg_get_constraintdef\\(oid\\) FROM pg_constraint WHERE conname = 'notifications_type_check';\" 2>&1)",
+      "PowerShell(cd d:\\\\BotLeague\\\\Botleague-Frontend; npx tsc --noEmit --project tsconfig.app.json 2>&1 | Where-Object { $_ -match \"\\(useChatWebSocket|chatSlice|MessagesPage\\)\" })",
+      "PowerShell(cd d:\\\\BotLeague\\\\Botleague-Frontend; $out = npx tsc --noEmit --project tsconfig.app.json 2>&1 | Out-String; \\($out -split \"`n\"\\) | Where-Object { $_ -match \"useChatWebSocket|chatSlice|MessagesPage\" })",
+      "Bash(Get-ChildItem -Path \"d:\\\\BotLeague\" -Recurse -Depth 2 -Directory)",
+      "Bash(Select-Object FullName)",
+      "Bash(Get-ChildItem -Path \"d:\\\\BotLeague\\\\botleague-backend\\\\src\\\\main\\\\java\\\\com\\\\botleague\\\\backend\" -Directory)",
+      "Bash(Select-Object -ExpandProperty Name)",
+      "Bash(xargs grep -l \"cors\\\\|security\\\\|allowed\")",
+      "Bash(xargs grep -l \"permitAll\\\\|authenticated\")",
+      "Bash(xargs head -80)",
+      "Bash(Get-ChildItem -Path \"d:\\\\BotLeague\" -Directory)",
+      "Bash(Select-Object Name)",
+      "PowerShell(Get-ChildItem -Path \"d:\\\\BotLeague\\\\botleague-backend\\\\src\\\\main\\\\java\\\\com\\\\botleague\\\\backend\\\\guardian\" -Recurse -Directory | ForEach-Object { $_.Name })",
+      "Bash(Get-ChildItem \"d:\\\\BotLeague\\\\botleague-backend\\\\target\\\\classes\\\\com\\\\botleague\\\\backend\\\\events\\\\service\\\\\" -Filter \"*.class\" | Select-Object Name, LastWriteTime | Sort-Object LastWriteTime -Descending)"
+    ]
+  }
+}
