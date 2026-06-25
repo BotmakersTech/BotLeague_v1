@@ -1,6 +1,6 @@
 import React, { useRef, useState } from "react";
 import insta from "../assets/Instagram.png";
-import youtube from "../assets/Youtube.png";
+import youtube from "../assets/youtube.png";
 import { updateUsername } from "../feature/Profile/api/profile.api";
 
 
