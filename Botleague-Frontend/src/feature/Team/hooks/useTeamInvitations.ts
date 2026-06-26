@@ -6,6 +6,7 @@ import {
   useMemo,
   useState,
 } from "react";
+import { useProfileComplete } from "../../../shared/hooks/useProfileComplete";
 
 import { useNavigate } from "react-router-dom";
 import { useDispatch } from "react-redux";
@@ -33,6 +34,11 @@ export default function useTeamInvitations() {
   const navigate = useNavigate();
 
   const dispatch = useDispatch();
+
+  const { isComplete, missingFields } = useProfileComplete();
+
+  // Controls the "complete your profile" gate modal for join-team action
+  const [showProfileGate, setShowProfileGate] = useState(false);
 
   // ======================================================
   // STATE
@@ -119,6 +125,12 @@ export default function useTeamInvitations() {
   const handleAcceptInvitation =
     useCallback(
       async (inviteId: string) => {
+
+        // ── Profile completeness gate ─────────────────────────
+        if (!isComplete) {
+          setShowProfileGate(true);
+          return;
+        }
 
         try {
 
@@ -332,5 +344,10 @@ export default function useTeamInvitations() {
 
     leaveTeam:
       handleLeaveTeam,
+
+    // profile gate
+    showProfileGate,
+    missingFields,
+    closeProfileGate: () => setShowProfileGate(false),
   };
 }

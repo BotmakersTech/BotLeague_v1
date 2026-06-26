@@ -75,11 +75,22 @@ public class TeamService {
             throw ApiException.forbidden("Account is not active");
         }
 
-        if (user.getDateOfBirth() == null
-                || user.getEmail() == null
-                || user.getUsername() == null
-                || user.getPhone() == null) {
-            throw ApiException.badRequest("Complete your profile before creating a team");
+        // All four required fields must be filled before team creation
+        java.util.List<String> missing = new java.util.ArrayList<>();
+        if (user.getFirstName() == null || user.getFirstName().isBlank()
+                || user.getLastName() == null || user.getLastName().isBlank())
+            missing.add("Full Name");
+        if (user.getDateOfBirth() == null)
+            missing.add("Date of Birth");
+        if (user.getUsername() == null || user.getUsername().isBlank())
+            missing.add("Username");
+        if (user.getProfilePhotoUrl() == null || user.getProfilePhotoUrl().isBlank())
+            missing.add("Profile Picture");
+
+        if (!missing.isEmpty()) {
+            throw ApiException.badRequest(
+                "PROFILE_INCOMPLETE: Please complete your profile before creating a team. Missing: "
+                + String.join(", ", missing));
         }
 
         if (teamMembershipRepository.existsByUserIdAndStatus(userId, TeamMembershipStatus.ACTIVE)) {
@@ -105,7 +116,8 @@ public class TeamService {
         team.setStatus("PENDING");
         teamRepository.save(team);
 
-        userRoleService.ensureAdminRole(userId);
+        // Ensure the team captain has at least COMPETITOR role (not admin — that was a bug)
+        userRoleService.ensureUserRole(userId);
         teamMembershipService.assignCaptainOnCreate(team.getId(), userId);
 
         // Create team chat room

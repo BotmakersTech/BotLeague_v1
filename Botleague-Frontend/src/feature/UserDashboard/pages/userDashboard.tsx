@@ -13,6 +13,8 @@ import { acceptInvitation, declineInvitation } from "../api/userMembership.api";
 import useDashboard, { type EventView, type MatchView } from "../hooks/useDashboardData";
 import CategoryBadge from "../../../shared/components/CategoryBadge";
 import { useEligibility } from "../../Eligibility/hooks/useEligibility";
+import ProfileIncompleteModal from "../../../shared/components/ProfileIncompleteModal";
+import { useProfileComplete } from "../../../shared/hooks/useProfileComplete";
 
 const CARD = "rounded-2xl border border-white/[0.11] bg-[radial-gradient(circle,_#272525_0%,_#151516_100%)] f gap-5 items-center p-5";
 const numStyle = { fontFamily: "Orbitron", monospace: true } as const;
@@ -452,6 +454,9 @@ export default function UserDashboard() {
   const [showAllEvents, setShowAllEvents] = useState(false);
   const [accepting, setAccepting] = useState<string | null>(null);
   const [declining, setDeclining] = useState<string | null>(null);
+  const [showProfileGate, setShowProfileGate] = useState(false);
+
+  const { isComplete: profileComplete, missingFields } = useProfileComplete();
   const [leaveOpen, setLeaveOpen] = useState(false);
   const [leaving, setLeaving] = useState(false);
 
@@ -522,6 +527,7 @@ export default function UserDashboard() {
 
   /* handlers */
   const handleAccept = async (id: string) => {
+    if (!profileComplete) { setShowProfileGate(true); return; }
     setAccepting(id);
     try { await acceptInvitation(id); toast("success", "Invitation accepted!", "You've joined the team."); refresh(); }
     catch (e: any) { toast("error", "Failed to accept", e?.response?.data?.message || e?.message); }
@@ -569,6 +575,16 @@ export default function UserDashboard() {
   return (
     <div className="mx-auto max-w-[1152px] px-4 py-6">
       <Toasts toasts={toasts} onRem={removeToast} />
+
+      {/* Profile completion gate — shown before accepting an invite */}
+      {showProfileGate && (
+        <ProfileIncompleteModal
+          missingFields={missingFields}
+          action="join a team"
+          onClose={() => setShowProfileGate(false)}
+        />
+      )}
+
       <ConfirmLeave open={leaveOpen} teamName={team?.teamName} loading={leaving} onConfirm={confirmLeave} onCancel={() => setLeaveOpen(false)} />
       <InvitationsModal
         open={showInvites} onClose={() => setShowInvites(false)} loading={invitesLoading}

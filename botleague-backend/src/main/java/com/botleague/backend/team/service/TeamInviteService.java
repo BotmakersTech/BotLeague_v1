@@ -136,6 +136,25 @@ public class TeamInviteService {
             throw new ApiException(HttpStatus.GONE, "Invite has expired");
         }
 
+        // Guard: profile must be complete before joining a team
+        User joiningUser = userRepository.findById(currentUserId)
+                .orElseThrow(() -> ApiException.notFound("User not found"));
+        java.util.List<String> missingFields = new java.util.ArrayList<>();
+        if (joiningUser.getFirstName() == null || joiningUser.getFirstName().isBlank()
+                || joiningUser.getLastName() == null || joiningUser.getLastName().isBlank())
+            missingFields.add("Full Name");
+        if (joiningUser.getDateOfBirth() == null)
+            missingFields.add("Date of Birth");
+        if (joiningUser.getUsername() == null || joiningUser.getUsername().isBlank())
+            missingFields.add("Username");
+        if (joiningUser.getProfilePhotoUrl() == null || joiningUser.getProfilePhotoUrl().isBlank())
+            missingFields.add("Profile Picture");
+        if (!missingFields.isEmpty()) {
+            throw ApiException.badRequest(
+                "PROFILE_INCOMPLETE: Please complete your profile before joining a team. Missing: "
+                + String.join(", ", missingFields));
+        }
+
         // Guard: user must not already be active in ANY team
         boolean alreadyInTeam = teamMembershipRepository
                 .existsByUserIdAndStatus(currentUserId, TeamMembershipStatus.ACTIVE);

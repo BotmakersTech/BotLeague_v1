@@ -12,6 +12,7 @@ import {
 } from "../api/uploadTeamLogo.api";
 
 import { useNavigate } from "react-router-dom";
+import { useProfileComplete } from "../../../../shared/hooks/useProfileComplete";
 
 // ======================================================
 // HOOK
@@ -20,6 +21,10 @@ import { useNavigate } from "react-router-dom";
 export default function useCreateTeam() {
 
   const navigate = useNavigate();
+  const { isComplete, missingFields } = useProfileComplete();
+
+  // Controls the "complete your profile" gate modal
+  const [showProfileGate, setShowProfileGate] = useState(false);
 
   // ======================================================
   // FORM STATE
@@ -124,6 +129,12 @@ export default function useCreateTeam() {
 
   const handleSubmit = async () => {
 
+    // ── Profile completeness gate ─────────────────────────────
+    if (!isComplete) {
+      setShowProfileGate(true);
+      return;
+    }
+
     try {
 
       setIsLoading(true);
@@ -200,6 +211,11 @@ export default function useCreateTeam() {
     // ui
     isLoading,
     error,
+
+    // profile gate
+    showProfileGate,
+    missingFields,
+    closeProfileGate: () => setShowProfileGate(false),
 
     // actions
     handleChange,
