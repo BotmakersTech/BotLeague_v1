@@ -26,8 +26,12 @@ function getAccessToken(): string | null {
   return null
 }
 
+const IST: Intl.DateTimeFormatOptions = { timeZone: "Asia/Kolkata" }
+
 function formatTime(dateString: string): string {
-  return new Date(dateString).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
+  return new Date(dateString).toLocaleTimeString("en-IN", {
+    ...IST, hour: "2-digit", minute: "2-digit", hour12: true,
+  })
 }
 
 function formatRelativeTime(dateString: string): string {
@@ -42,21 +46,27 @@ function formatRelativeTime(dateString: string): string {
   return `${d}d ago`
 }
 
+/** Returns "YYYY-MM-DD" in IST so date comparisons are timezone-correct. */
+function toISTDateStr(dateString: string): string {
+  return new Date(dateString).toLocaleDateString("en-CA", IST) // "YYYY-MM-DD"
+}
+
 function formatDateDivider(dateString: string): string {
-  const date = new Date(dateString)
-  const now = new Date()
-  const todayMs = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime()
-  const dateMs = new Date(date.getFullYear(), date.getMonth(), date.getDate()).getTime()
-  const diff = todayMs - dateMs
-  if (diff === 0) return "Today"
-  if (diff === 86_400_000) return "Yesterday"
-  return date.toLocaleDateString([], { weekday: "long", month: "long", day: "numeric" })
+  const todayIST = toISTDateStr(new Date().toISOString())
+  const dateIST  = toISTDateStr(dateString)
+  if (dateIST === todayIST) return "Today"
+  // Check yesterday
+  const yd = new Date()
+  yd.setDate(yd.getDate() - 1)
+  if (dateIST === toISTDateStr(yd.toISOString())) return "Yesterday"
+  return new Date(dateString).toLocaleDateString("en-IN", {
+    ...IST, weekday: "long", month: "long", day: "numeric",
+  })
 }
 
 function isSameDay(a: string, b: string | null): boolean {
   if (!b) return false
-  const da = new Date(a), db = new Date(b)
-  return da.getFullYear() === db.getFullYear() && da.getMonth() === db.getMonth() && da.getDate() === db.getDate()
+  return toISTDateStr(a) === toISTDateStr(b)
 }
 
 function getInitials(name: string): string {
