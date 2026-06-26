@@ -18,6 +18,8 @@ import Modal from "../../../shared/components/Modal";
 import InputField from "../../../shared/components/InputField";
 import LocationSelects from "../../../shared/components/LocationSelects";
 import PrimaryBtn from "../../../shared/components/PrimaryBtn";
+import ProfileIncompleteModal from "../../../shared/components/ProfileIncompleteModal";
+import { useProfileComplete } from "../../../shared/hooks/useProfileComplete";
 import InviteCard from "../TeamMembership/components/InviteCard";
 import useTeamMembership from "../../Team/TeamMembership/hooks/useTeamMembership";
 import RobotDetailModal from "../../Robots/components/RobotDetailModal";
@@ -757,6 +759,21 @@ export default function MyTeams() {
 
   const navigate = useNavigate();
   const { team, isLoading } = useTeam();
+
+  // Profile completion gate
+  const { isComplete: profileComplete, missingFields } = useProfileComplete();
+  const [showProfileGate, setShowProfileGate]   = useState(false);
+  const [gateAction,      setGateAction]         = useState<"create a team" | "join a team">("create a team");
+
+  const handleCreateTeamClick = () => {
+    if (!profileComplete) { setGateAction("create a team"); setShowProfileGate(true); return; }
+    navigate("/create-team");
+  };
+
+  const handleJoinTeamClick = () => {
+    if (!profileComplete) { setGateAction("join a team"); setShowProfileGate(true); return; }
+    navigate("/join-team");
+  };
   const { robots, loading: robotsLoading, error: robotsError } = useRobots(team1?.teamCode);
 
   const {
@@ -857,11 +874,20 @@ export default function MyTeams() {
         <p className="text-gray-400 mb-9 text-sm text-center max-w-sm leading-relaxed">
           You're not part of any team yet. Create your own team or join an existing one to start competing.
         </p>
+        {/* Profile gate modal */}
+        {showProfileGate && (
+          <ProfileIncompleteModal
+            missingFields={missingFields}
+            action={gateAction}
+            onClose={() => setShowProfileGate(false)}
+          />
+        )}
+
         <div className="flex gap-4 flex-wrap justify-center">
-          <button onClick={() => navigate("/create-team")} className="bg-[#fa4715] border-none text-white px-7 py-3.5 rounded-[18px] cursor-pointer font-bold text-sm inline-flex items-center gap-2 shadow-[0_4px_20px_rgba(250,71,21,0.35)] hover:opacity-88 transition-opacity">
+          <button onClick={handleCreateTeamClick} className="bg-[#fa4715] border-none text-white px-7 py-3.5 rounded-[18px] cursor-pointer font-bold text-sm inline-flex items-center gap-2 shadow-[0_4px_20px_rgba(250,71,21,0.35)] hover:opacity-88 transition-opacity">
             <Plus size={18} /> Create Team
           </button>
-          <button onClick={() => navigate("/join-team")} className="bg-white/6 border border-white/9 text-white px-7 py-3.5 rounded-[18px] cursor-pointer font-bold text-sm inline-flex items-center gap-2 hover:bg-white/10 hover:border-[#fa4715]/38 transition-all">
+          <button onClick={handleJoinTeamClick} className="bg-white/6 border border-white/9 text-white px-7 py-3.5 rounded-[18px] cursor-pointer font-bold text-sm inline-flex items-center gap-2 hover:bg-white/10 hover:border-[#fa4715]/38 transition-all">
             <DoorOpen size={18} /> Join Team
           </button>
         </div>

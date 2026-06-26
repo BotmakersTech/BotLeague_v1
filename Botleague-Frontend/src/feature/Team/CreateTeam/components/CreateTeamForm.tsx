@@ -11,8 +11,6 @@ import CreateTeamFooter from "./CreateTeamFooter";
 import useCreateTeam from
 "../hooks/useCreateTeam";
 
-import ProfileIncompleteModal from "../../../../shared/components/ProfileIncompleteModal";
-
 export default function CreateTeamForm() {
 
   const [focused, setFocused] =
@@ -33,10 +31,6 @@ export default function CreateTeamForm() {
     handleLogoUpload,
 
     handleSubmit,
-
-    showProfileGate,
-    missingFields,
-    closeProfileGate,
 
   } = useCreateTeam();
 
@@ -77,15 +71,6 @@ export default function CreateTeamForm() {
         color: "#fff",
       }}
     >
-
-      {/* Profile completion gate — shown when required fields are missing */}
-      {showProfileGate && (
-        <ProfileIncompleteModal
-          missingFields={missingFields}
-          action="create a team"
-          onClose={closeProfileGate}
-        />
-      )}
 
       <TeamHeader />
 
