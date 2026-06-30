@@ -7,6 +7,7 @@ import CreateRobotForm from "../components/CreateRobotFrom";
 import Modal from "../../../shared/components/Modal";
 import type { Robot } from "../types/types";
 import ShareButton from "../../../shared/components/ShareButton";
+import useTeamMembership from "../../Team/TeamMembership/hooks/useTeamMembership";
 
 // ─── Category config ───────────────────────────────────────────────────────
 const CATEGORY_COLOR: Record<string, string> = {
@@ -467,6 +468,7 @@ export default function RobotsPage() {
 
   const teamCode = useAppSelector((state) => state.team.teamCode);
   const { robots, loading, error, fetchRobots } = useRobots(teamCode ?? undefined);
+  const { isAdmin: canManageRobots } = useTeamMembership(teamCode ?? "");
 
   const [selected, setSelected]   = useState<Robot | null>(null);
   const [showCreate, setShowCreate] = useState(false);
@@ -518,9 +520,11 @@ export default function RobotsPage() {
             <h1 className="rp-title">Team Robots</h1>
             <p className="rp-subtitle">Manage and monitor your competition robots</p>
           </div>
-          <button className="rp-add-btn" onClick={() => setShowCreate(true)}>
-            <PlusIcon /> ADD ROBOT
-          </button>
+          {canManageRobots && (
+            <button className="rp-add-btn" onClick={() => setShowCreate(true)}>
+              <PlusIcon /> ADD ROBOT
+            </button>
+          )}
         </div>
 
         {/* ── Stats bar ── */}
@@ -582,7 +586,7 @@ export default function RobotsPage() {
                   ? `No ${CATEGORY_LABEL[activeFilter] ?? activeFilter} robots yet.`
                   : "Add your first robot to get started."}
               </p>
-              {activeFilter === "ALL" && (
+              {activeFilter === "ALL" && canManageRobots && (
                 <button className="rp-empty-btn" onClick={() => setShowCreate(true)}>
                   <PlusIcon /> ADD FIRST ROBOT
                 </button>
@@ -687,7 +691,12 @@ export default function RobotsPage() {
 
       {/* Detail modal */}
       {selected && (
-        <RobotDetailModal robot={selected} onClose={() => setSelected(null)} />
+        <RobotDetailModal
+          robot={selected}
+          onClose={() => setSelected(null)}
+          canEdit={canManageRobots}
+          onUpdated={() => { fetchRobots(); setSelected(null); }}
+        />
       )}
 
       {/* Create modal */}

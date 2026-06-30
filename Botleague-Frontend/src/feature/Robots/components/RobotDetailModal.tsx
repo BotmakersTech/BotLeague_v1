@@ -1,11 +1,20 @@
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { Robot } from "../types/types";
+import { updateRobot, type UpdateRobotPayload } from "../api/robot.api";
 
 interface RobotDetailModalProps {
   robot: Robot;
   onClose: () => void;
+  /** Only CAPTAIN / VICE_CAPTAIN can edit. Regular members get a read-only view. */
+  canEdit?: boolean;
+  /** Called with the updated robot after a successful save, so the list can refresh. */
+  onUpdated?: (robot: Robot) => void;
 }
+
+const CONTROL_TYPES = ["MANUAL", "AUTONOMOUS", "HYBRID"];
+const CONTROL_MODES = ["WIRED", "WIRELESS"];
+const STATUSES = ["ACTIVE", "INACTIVE", "MAINTENANCE"];
 
 const CATEGORY_COLOR: Record<string, string> = {
   COMBAT:        "#ef4444",
@@ -403,6 +412,59 @@ const CSS = `
     color: #fff;
     border-color: rgba(255,255,255,0.2);
   }
+
+  /* ── Edit button ── */
+  .rdm-edit-btn {
+    padding: 10px 22px;
+    border-radius: 10px;
+    border: none;
+    background: linear-gradient(135deg, #fa4715, #f97316);
+    color: #fff;
+    font-family: 'Syne', sans-serif;
+    font-size: 0.82rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: filter 0.15s, transform 0.15s;
+  }
+  .rdm-edit-btn:hover { filter: brightness(1.1); transform: translateY(-1px); }
+  .rdm-edit-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+  /* ── Edit form ── */
+  .rdm-field-label {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 0.55rem;
+    font-weight: 600;
+    letter-spacing: 0.14em;
+    color: #6b7280;
+    text-transform: uppercase;
+    margin-bottom: 6px;
+    display: block;
+  }
+  .rdm-input, .rdm-select, .rdm-textarea {
+    width: 100%;
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 9px;
+    padding: 9px 12px;
+    color: #fff;
+    font-family: 'Syne', sans-serif;
+    font-size: 0.85rem;
+    outline: none;
+    transition: border-color 0.15s;
+  }
+  .rdm-input:focus, .rdm-select:focus, .rdm-textarea:focus {
+    border-color: rgba(250,71,21,0.5);
+  }
+  .rdm-textarea { resize: none; }
+  .rdm-edit-error {
+    background: rgba(239,68,68,0.1);
+    border: 1px solid rgba(239,68,68,0.3);
+    color: #f87171;
+    border-radius: 9px;
+    padding: 8px 12px;
+    font-size: 0.78rem;
+    margin-bottom: 14px;
+  }
 `;
 
 function injectStyles() {
@@ -414,21 +476,53 @@ function injectStyles() {
   document.head.appendChild(tag);
 }
 
-export default function RobotDetailModal({ robot, onClose }: RobotDetailModalProps) {
+export default function RobotDetailModal({ robot, onClose, canEdit = false, onUpdated }: RobotDetailModalProps) {
   injectStyles();
 
   const overlayRef = useRef<HTMLDivElement>(null);
+  const [editing, setEditing] = useState(false);
+  const [saving, setSaving]   = useState(false);
+  const [err, setErr]         = useState<string | null>(null);
+  const [form, setForm] = useState<UpdateRobotPayload>({
+    robotName:   robot.robotName,
+    weightClass: robot.weightClass ?? "",
+    weightKg:    robot.weightKg,
+    controlType: robot.controlType,
+    controlMode: robot.controlMode ?? "WIRELESS",
+    lengthCm:    robot.lengthCm,
+    widthCm:     robot.widthCm,
+    heightCm:    robot.heightCm,
+    description: robot.description ?? "",
+    status:      robot.status,
+  });
 
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onClose();
+      if (e.key === "Escape") { if (editing) setEditing(false); else onClose(); }
     };
     window.addEventListener("keydown", handler);
     return () => window.removeEventListener("keydown", handler);
-  }, [onClose]);
+  }, [onClose, editing]);
 
   const handleOverlayClick = (e: React.MouseEvent) => {
-    if (e.target === overlayRef.current) onClose();
+    if (e.target === overlayRef.current && !editing) onClose();
+  };
+
+  const set = <K extends keyof UpdateRobotPayload>(k: K, v: UpdateRobotPayload[K]) =>
+    setForm(f => ({ ...f, [k]: v }));
+
+  const handleSave = async () => {
+    setSaving(true);
+    setErr(null);
+    try {
+      const updated = await updateRobot(robot.id, form);
+      onUpdated?.(updated);
+      setEditing(false);
+    } catch (ex: any) {
+      setErr(ex?.response?.data?.message ?? "Failed to update robot");
+    } finally {
+      setSaving(false);
+    }
   };
 
   const accentColor = CATEGORY_COLOR[robot.robotType] ?? "#9ca3af";
@@ -513,27 +607,107 @@ export default function RobotDetailModal({ robot, onClose }: RobotDetailModalPro
 
           <div className="rdm-divider" />
 
-          <div className="rdm-specs">
-            {specs.map(({ label, value }) => (
-              <div key={label} className="rdm-spec-card">
-                <p className="rdm-spec-label">{label}</p>
-                <p className="rdm-spec-value">{value}</p>
-              </div>
-            ))}
-          </div>
-
-          {robot.description && (
+          {!editing ? (
             <>
-              <p className="rdm-desc-label">Description</p>
-              <p className="rdm-desc-text">{robot.description}</p>
+              <div className="rdm-specs">
+                {specs.map(({ label, value }) => (
+                  <div key={label} className="rdm-spec-card">
+                    <p className="rdm-spec-label">{label}</p>
+                    <p className="rdm-spec-value">{value}</p>
+                  </div>
+                ))}
+              </div>
+
+              {robot.description && (
+                <>
+                  <p className="rdm-desc-label">Description</p>
+                  <p className="rdm-desc-text">{robot.description}</p>
+                </>
+              )}
+
+              <div className="rdm-footer" style={{ gap: 10 }}>
+                <button className="rdm-close-btn" onClick={onClose}>Close</button>
+                {canEdit && (
+                  <button className="rdm-edit-btn" onClick={() => setEditing(true)}>
+                    Edit Robot
+                  </button>
+                )}
+              </div>
+            </>
+          ) : (
+            <>
+              {err && <div className="rdm-edit-error">{err}</div>}
+
+              <div style={{ display: "grid", gap: 14 }}>
+                <div>
+                  <label className="rdm-field-label">Robot Name</label>
+                  <input className="rdm-input" value={form.robotName ?? ""} onChange={e => set("robotName", e.target.value)} />
+                </div>
+
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+                  <div>
+                    <label className="rdm-field-label">Weight Class</label>
+                    <input className="rdm-input" value={form.weightClass ?? ""} onChange={e => set("weightClass", e.target.value)} />
+                  </div>
+                  <div>
+                    <label className="rdm-field-label">Weight (kg)</label>
+                    <input className="rdm-input" type="number" step="0.1" min="0" value={form.weightKg ?? ""} onChange={e => set("weightKg", e.target.value ? parseFloat(e.target.value) : undefined)} />
+                  </div>
+                </div>
+
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+                  <div>
+                    <label className="rdm-field-label">Control Type</label>
+                    <select className="rdm-select" value={form.controlType} onChange={e => set("controlType", e.target.value)}>
+                      {CONTROL_TYPES.map(c => <option key={c} value={c}>{c}</option>)}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="rdm-field-label">Connection</label>
+                    <select className="rdm-select" value={form.controlMode} onChange={e => set("controlMode", e.target.value)}>
+                      {CONTROL_MODES.map(c => <option key={c} value={c}>{c}</option>)}
+                    </select>
+                  </div>
+                </div>
+
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 12 }}>
+                  <div>
+                    <label className="rdm-field-label">Length (cm)</label>
+                    <input className="rdm-input" type="number" step="0.1" min="0" value={form.lengthCm ?? ""} onChange={e => set("lengthCm", e.target.value ? parseFloat(e.target.value) : undefined)} />
+                  </div>
+                  <div>
+                    <label className="rdm-field-label">Width (cm)</label>
+                    <input className="rdm-input" type="number" step="0.1" min="0" value={form.widthCm ?? ""} onChange={e => set("widthCm", e.target.value ? parseFloat(e.target.value) : undefined)} />
+                  </div>
+                  <div>
+                    <label className="rdm-field-label">Height (cm)</label>
+                    <input className="rdm-input" type="number" step="0.1" min="0" value={form.heightCm ?? ""} onChange={e => set("heightCm", e.target.value ? parseFloat(e.target.value) : undefined)} />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="rdm-field-label">Status</label>
+                  <select className="rdm-select" value={form.status} onChange={e => set("status", e.target.value)}>
+                    {STATUSES.map(s => <option key={s} value={s}>{s}</option>)}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="rdm-field-label">Description</label>
+                  <textarea className="rdm-textarea" rows={3} value={form.description ?? ""} onChange={e => set("description", e.target.value)} />
+                </div>
+              </div>
+
+              <div className="rdm-footer" style={{ gap: 10 }}>
+                <button className="rdm-close-btn" onClick={() => { setEditing(false); setErr(null); }} disabled={saving}>
+                  Cancel
+                </button>
+                <button className="rdm-edit-btn" onClick={handleSave} disabled={saving}>
+                  {saving ? "Saving…" : "Save Changes"}
+                </button>
+              </div>
             </>
           )}
-
-          <div className="rdm-footer">
-            <button className="rdm-close-btn" onClick={onClose}>
-              Close
-            </button>
-          </div>
         </div>
       </div>
     </div>

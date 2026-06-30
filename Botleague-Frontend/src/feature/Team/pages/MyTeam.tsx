@@ -729,7 +729,7 @@ export default function MyTeams() {
     if (!profileComplete) { setGateAction("join a team"); setShowProfileGate(true); return; }
     navigate("/join-team");
   };
-  const { robots, loading: robotsLoading, error: robotsError } = useRobots(team1?.teamCode);
+  const { robots, loading: robotsLoading, error: robotsError, fetchRobots } = useRobots(team1?.teamCode);
 
   const {
     members: teamMemberships,
@@ -1236,7 +1236,12 @@ export default function MyTeams() {
       )}
 
       {selectedRobot && (
-        <RobotDetailModal robot={selectedRobot as any} onClose={() => setSelectedRobot(null)} />
+        <RobotDetailModal
+          robot={selectedRobot as any}
+          onClose={() => setSelectedRobot(null)}
+          canEdit={isTeamAdmin}
+          onUpdated={() => { fetchRobots(); setSelectedRobot(null); }}
+        />
       )}
 
       {/* Safety net — member-only restricted modal */}
