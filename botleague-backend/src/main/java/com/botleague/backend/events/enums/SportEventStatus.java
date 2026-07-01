@@ -2,6 +2,8 @@ package com.botleague.backend.events.enums;
 
 public enum SportEventStatus {
     DRAFT,
-	REGISTRATION_OPEN,
-	REGISTRATION_CLOSED
+    PENDING_APPROVAL,   // submitted to admin; awaiting review
+    APPROVED,           // admin approved; organiser may open registration
+    REGISTRATION_OPEN,
+    REGISTRATION_CLOSED
 }

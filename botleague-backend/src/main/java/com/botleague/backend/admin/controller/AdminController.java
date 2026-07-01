@@ -18,6 +18,9 @@ import com.botleague.backend.admin.dto.AdminAllEventResponse;
 import com.botleague.backend.admin.dto.ChangeEventStatusRequest;
 import com.botleague.backend.admin.dto.UpdateEventRequest;
 import com.botleague.backend.admin.service.AdminService;
+import com.botleague.backend.events.dto.GetEventSportsDTO;
+import com.botleague.backend.events.service.EventSportsService;
+import org.springframework.web.bind.annotation.RequestParam;
 
 @RestController
 @RequestMapping("/api/admin")
@@ -29,15 +32,18 @@ public class AdminController {
     // =====================================================
 
     private final AdminService adminService;
+    private final EventSportsService eventSportsService;
 
     // =====================================================
     // CONSTRUCTOR
     // =====================================================
 
     public AdminController(
-            AdminService adminService
+            AdminService adminService,
+            EventSportsService eventSportsService
     ) {
         this.adminService = adminService;
+        this.eventSportsService = eventSportsService;
     }
 
     // =====================================================
@@ -108,5 +114,24 @@ public class AdminController {
     public ResponseEntity<Void> deleteEvent(@PathVariable UUID eventId) {
         adminService.softDeleteEvent(eventId);
         return ResponseEntity.noContent().build();
+    }
+
+    // =====================================================
+    // SPORT APPROVAL  (ADMINISTRATOR and above)
+    // =====================================================
+
+    @PatchMapping("/sports/{sportId}/approve")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN','ADMINISTRATOR','MANAGER')")
+    public ResponseEntity<GetEventSportsDTO> approveSport(@PathVariable UUID sportId) {
+        return ResponseEntity.ok(eventSportsService.approveSport(sportId));
+    }
+
+    @PatchMapping("/sports/{sportId}/reject")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN','ADMINISTRATOR','MANAGER')")
+    public ResponseEntity<GetEventSportsDTO> rejectSport(
+            @PathVariable UUID sportId,
+            @RequestParam(required = false) String reason
+    ) {
+        return ResponseEntity.ok(eventSportsService.rejectSport(sportId, reason));
     }
 }

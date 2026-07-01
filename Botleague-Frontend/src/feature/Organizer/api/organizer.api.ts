@@ -30,6 +30,7 @@ export interface OrganizerSport {
   ageGroup: string | null;
   weightClass: string | null;
   status: string;
+  bracketGenerated: boolean;
   registeredTeamsCount?: number;
   maxTeams?: number;
   registrationStartDate?: string;
@@ -509,6 +510,43 @@ export const issueCertificate = async (
 
 export const deleteCertificate = async (eventId: string, certId: string): Promise<void> => {
   await api.delete(`/organizer/events/${eventId}/certificates/${certId}`);
+};
+
+// ── Sport lifecycle ───────────────────────────────────────────────────────────
+
+export const submitSportForApproval = async (
+  eventId: string,
+  sportId: string
+): Promise<OrganizerSport> => {
+  const res = await api.post(`/organizer/events/${eventId}/sports/${sportId}/submit-approval`);
+  return res.data;
+};
+
+export const toggleSportRegistration = async (
+  eventId: string,
+  sportId: string
+): Promise<string> => {
+  const res = await api.patch(`/events/${eventId}/sports/${sportId}/registration`);
+  return res.data;
+};
+
+export const changeEventStatus = async (
+  eventId: string,
+  status: string
+): Promise<OrganizerEvent> => {
+  const res = await api.patch(`/admin/events/${eventId}/status`, { status });
+  return res.data;
+};
+
+export const adminApproveSport = async (sportId: string): Promise<OrganizerSport> => {
+  const res = await api.patch(`/admin/sports/${sportId}/approve`);
+  return res.data;
+};
+
+export const adminRejectSport = async (sportId: string, reason?: string): Promise<OrganizerSport> => {
+  const params = reason ? { params: { reason } } : {};
+  const res = await api.patch(`/admin/sports/${sportId}/reject`, undefined, params);
+  return res.data;
 };
 
 // ── Matches ───────────────────────────────────────────────────────────────────

@@ -40,6 +40,7 @@ public class GetEventSportsDTO {
     private LocalDate registrationEndDate;
 
     private String status;            // enum name
+    private boolean bracketGenerated;
     private LocalDateTime createdAt;
 
     // ---- getters & setters ----
@@ -114,6 +115,9 @@ public class GetEventSportsDTO {
 
     public String getStatus() { return status; }
     public void setStatus(String status) { this.status = status; }
+
+    public boolean isBracketGenerated() { return bracketGenerated; }
+    public void setBracketGenerated(boolean bracketGenerated) { this.bracketGenerated = bracketGenerated; }
 
     public LocalDateTime getCreatedAt() { return createdAt; }
     public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }

@@ -206,6 +206,15 @@ public class MatchService {
                 }
 
                 matchRepository.saveAll(matches);
+
+                UUID sportId = request.getEventSportId();
+                if (sportId != null) {
+                    eventSportsRepository.findById(sportId).ifPresent(sport -> {
+                        sport.setBracketGenerated(true);
+                        eventSportsRepository.save(sport);
+                    });
+                }
+
                 // Push each match individually so spectators can add them directly to Redux
                 // without needing a separate REST fetch.
                 List<MatchResponseDTO> created = fetchOrderedResponse(request.getEventSportId());

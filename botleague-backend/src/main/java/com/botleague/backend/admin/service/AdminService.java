@@ -23,6 +23,7 @@ import com.botleague.backend.admin.dto.UpdateEventRequest;
 import com.botleague.backend.events.entity.Event;
 import com.botleague.backend.events.enums.EventStatus;
 import com.botleague.backend.events.enums.EventTier;
+import com.botleague.backend.events.enums.SportEventStatus;
 import com.botleague.backend.events.entity.EventRegistrationLineup;
 import com.botleague.backend.events.entity.EventSports;
 import com.botleague.backend.events.entity.SportRegistration;
@@ -32,6 +33,7 @@ import com.botleague.backend.events.repository.EventRegistrationLineupRepository
 import com.botleague.backend.events.repository.EventRepository;
 import com.botleague.backend.events.repository.EventSportsRepository;
 import com.botleague.backend.events.repository.SportRegistrationRepository;
+import com.botleague.backend.matches.repository.MatchRepository;
 import com.botleague.backend.audit.service.AuditLogService;
 import com.botleague.backend.auth.repository.UserRepository;
 import com.botleague.backend.notification.enums.NotificationPriority;
@@ -67,6 +69,7 @@ public class AdminService {
     private final TeamRepository                    teamRepository;
     private final TeamMembershipRepository          teamMembershipRepository;
     private final UserRepository                    userRepository;
+    private final MatchRepository                   matchRepository;
     private final NotificationService               notificationService;
     private final AuditLogService                   auditLogService;
     private final RealtimePublisher                 realtimePublisher;
@@ -83,6 +86,7 @@ public class AdminService {
             TeamRepository                    teamRepository,
             TeamMembershipRepository          teamMembershipRepository,
             UserRepository                    userRepository,
+            MatchRepository                   matchRepository,
             NotificationService               notificationService,
             AuditLogService                   auditLogService,
             RealtimePublisher                 realtimePublisher
@@ -94,6 +98,7 @@ public class AdminService {
         this.teamRepository              = teamRepository;
         this.teamMembershipRepository    = teamMembershipRepository;
         this.userRepository              = userRepository;
+        this.matchRepository             = matchRepository;
         this.notificationService         = notificationService;
         this.auditLogService             = auditLogService;
         this.realtimePublisher           = realtimePublisher;
@@ -291,6 +296,11 @@ public class AdminService {
             );
         }
 
+        // ── Publish gate ──────────────────────────────────────────────────────
+        if (newStatus == EventStatus.PUBLISHED) {
+            validatePublishPrerequisites(eventId);
+        }
+
         event.setStatus(newStatus);
         Event saved = eventRepository.save(event);
         auditLogService.log("EVENT_STATUS_CHANGED", "EVENT", saved.getId(),
@@ -317,6 +327,57 @@ public class AdminService {
                     "/events/" + event.getId()
             );
             default -> { /* no auto-notification for DRAFT, COMPLETED, ARCHIVED */ }
+        }
+    }
+
+    // ── Publish prerequisite validation ──────────────────────────────────────
+
+    private void validatePublishPrerequisites(UUID eventId) {
+        List<com.botleague.backend.events.entity.EventSports> sports =
+                eventSportRepository.findByEventId(eventId);
+
+        if (sports.isEmpty()) {
+            throw new IllegalStateException(
+                "Cannot publish: the event has no sports configured.");
+        }
+
+        List<String> blockers = new ArrayList<>();
+
+        for (com.botleague.backend.events.entity.EventSports sport : sports) {
+            String label = sport.getSport()
+                + (sport.getWeightClass() != null ? " (" + sport.getWeightClass() + ")" : "");
+
+            if (sport.getStatus() == SportEventStatus.DRAFT
+                    || sport.getStatus() == SportEventStatus.PENDING_APPROVAL) {
+                blockers.add(label + ": not yet approved by admin");
+                continue;
+            }
+            if (sport.getStatus() == SportEventStatus.APPROVED
+                    || sport.getStatus() == SportEventStatus.REGISTRATION_OPEN) {
+                blockers.add(label + ": registration is not closed");
+                continue;
+            }
+            // Status is REGISTRATION_CLOSED — check bracket
+            if (!sport.isBracketGenerated()) {
+                blockers.add(label + ": tournament bracket not generated");
+                continue;
+            }
+            // Check all non-bye matches are scheduled
+            long unscheduled = matchRepository
+                    .findByEventSportIdAndDeletedAtIsNull(sport.getId())
+                    .stream()
+                    .filter(m -> !Boolean.TRUE.equals(m.getIsBye())
+                              && m.getScheduledAt() == null)
+                    .count();
+            if (unscheduled > 0) {
+                blockers.add(label + ": " + unscheduled + " match(es) not yet scheduled");
+            }
+        }
+
+        if (!blockers.isEmpty()) {
+            throw new IllegalStateException(
+                "Cannot publish event. Unmet prerequisites:\n• " +
+                String.join("\n• ", blockers));
         }
     }
 
@@ -388,6 +449,7 @@ public class AdminService {
         dto.setPrizeMoney(sport.getPrizeMoney());
         dto.setRegistrationStartDate(sport.getRegistrationStartDate());
         dto.setRegistrationEndDate(sport.getRegistrationEndDate());
+        dto.setBracketGenerated(sport.isBracketGenerated());
         dto.setCreatedAt(sport.getCreatedAt());
         dto.setUpdatedAt(sport.getUpdatedAt());
 

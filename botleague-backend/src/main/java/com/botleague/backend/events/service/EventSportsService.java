@@ -10,6 +10,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.botleague.backend.chat.service.ChatService;
+import com.botleague.backend.matches.repository.MatchRepository;
 import com.botleague.backend.realtime.service.RealtimePublisher;
 import com.botleague.backend.events.dto.EventSportsRequestDTO;
 import com.botleague.backend.events.dto.GetEventSportsDTO;
@@ -28,15 +29,18 @@ public class EventSportsService {
 
     private final EventSportsRepository eventSportsRepository;
     private final EventRepository eventRepository;
+    private final MatchRepository matchRepository;
     private final ChatService chatService;
     private final RealtimePublisher realtimePublisher;
 
     public EventSportsService(EventSportsRepository eventSportsRepository,
                               EventRepository eventRepository,
+                              MatchRepository matchRepository,
                               ChatService chatService,
                               RealtimePublisher realtimePublisher) {
         this.eventSportsRepository = eventSportsRepository;
         this.eventRepository = eventRepository;
+        this.matchRepository = matchRepository;
         this.chatService = chatService;
         this.realtimePublisher = realtimePublisher;
     }
@@ -131,10 +135,14 @@ public class EventSportsService {
             sport.setStatus(SportEventStatus.REGISTRATION_CLOSED);
             sport.setRegistrationEndDate(LocalDate.now());
             realtimeType = com.botleague.backend.realtime.enums.RealtimeEventType.SPORT_REGISTRATION_CLOSED;
-        } else {
+        } else if (sport.getStatus() == SportEventStatus.APPROVED) {
             sport.setStatus(SportEventStatus.REGISTRATION_OPEN);
             sport.setRegistrationEndDate(LocalDate.now().plusDays(7));
             realtimeType = com.botleague.backend.realtime.enums.RealtimeEventType.SPORT_REGISTRATION_OPENED;
+        } else {
+            throw new IllegalStateException(
+                "Sport must be APPROVED by an admin before registration can be opened. Current status: "
+                + sport.getStatus());
         }
 
         EventSports saved = eventSportsRepository.save(sport);
@@ -146,6 +154,66 @@ public class EventSportsService {
         }
 
         return saved.getStatus().name();
+    }
+
+    // =========================
+    // SUBMIT FOR APPROVAL
+    // =========================
+    @Transactional
+    public GetEventSportsDTO submitForApproval(UUID sportId, UUID eventId) {
+        EventSports sport = eventSportsRepository
+                .findByIdAndEventId(sportId, eventId)
+                .orElseThrow(() -> new IllegalArgumentException("Sport not found"));
+
+        if (sport.getStatus() != SportEventStatus.DRAFT) {
+            throw new IllegalStateException(
+                "Only DRAFT sports can be submitted for approval. Current status: " + sport.getStatus());
+        }
+
+        sport.setStatus(SportEventStatus.PENDING_APPROVAL);
+        EventSports saved = eventSportsRepository.save(sport);
+        realtimePublisher.pushSportUpdate(saved.getId(), saved.getEventId(), mapToResponse(saved));
+        return mapToResponse(saved);
+    }
+
+    // =========================
+    // APPROVE SPORT (Admin)
+    // =========================
+    @Transactional
+    public GetEventSportsDTO approveSport(UUID sportId) {
+        EventSports sport = eventSportsRepository
+                .findById(sportId)
+                .orElseThrow(() -> new IllegalArgumentException("Sport not found"));
+
+        if (sport.getStatus() != SportEventStatus.PENDING_APPROVAL) {
+            throw new IllegalStateException(
+                "Only PENDING_APPROVAL sports can be approved. Current status: " + sport.getStatus());
+        }
+
+        sport.setStatus(SportEventStatus.APPROVED);
+        EventSports saved = eventSportsRepository.save(sport);
+        realtimePublisher.pushSportUpdate(saved.getId(), saved.getEventId(), mapToResponse(saved));
+        return mapToResponse(saved);
+    }
+
+    // =========================
+    // REJECT SPORT (Admin)
+    // =========================
+    @Transactional
+    public GetEventSportsDTO rejectSport(UUID sportId, String reason) {
+        EventSports sport = eventSportsRepository
+                .findById(sportId)
+                .orElseThrow(() -> new IllegalArgumentException("Sport not found"));
+
+        if (sport.getStatus() != SportEventStatus.PENDING_APPROVAL) {
+            throw new IllegalStateException(
+                "Only PENDING_APPROVAL sports can be rejected. Current status: " + sport.getStatus());
+        }
+
+        sport.setStatus(SportEventStatus.DRAFT);
+        EventSports saved = eventSportsRepository.save(sport);
+        realtimePublisher.pushSportUpdate(saved.getId(), saved.getEventId(), mapToResponse(saved));
+        return mapToResponse(saved);
     }
 
     // =========================
@@ -322,6 +390,7 @@ public class EventSportsService {
         response.setRegistrationEndDate(sport.getRegistrationEndDate());
 
         response.setStatus(sport.getStatus().name());
+        response.setBracketGenerated(sport.isBracketGenerated());
         response.setCreatedAt(sport.getCreatedAt());
 
         return response;

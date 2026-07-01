@@ -40,9 +40,10 @@ public class AdminEventSportResponse {
     private LocalDateTime createdAt;
 
     private LocalDateTime updatedAt;
-    
-    private List<AdminRegisteredTeamResponse>
-    registrations;
+
+    private boolean bracketGenerated;
+
+    private List<AdminRegisteredTeamResponse> registrations;
 
 	public UUID getId() {
 		return id;
@@ -190,7 +191,11 @@ public class AdminEventSportResponse {
 		this.updatedAt = updatedAt;
 	}
 
-    // getters setters
-    
-    
+	public boolean isBracketGenerated() {
+		return bracketGenerated;
+	}
+
+	public void setBracketGenerated(boolean bracketGenerated) {
+		this.bracketGenerated = bracketGenerated;
+	}
 }

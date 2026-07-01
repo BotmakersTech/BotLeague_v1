@@ -2,6 +2,7 @@ package com.botleague.backend.organizer.controller;
 
 import com.botleague.backend.events.dto.CreateEventResponseDTO;
 import com.botleague.backend.events.dto.GetEventSportsDTO;
+import com.botleague.backend.events.service.EventSportsService;
 import com.botleague.backend.organizer.dto.OrganizerDTOs.*;
 import com.botleague.backend.organizer.dto.UpdateEventInfoDTO;
 import com.botleague.backend.organizer.service.*;
@@ -24,18 +25,21 @@ public class OrganizerController {
     private final OrganizerCommunicationService communicationService;
     private final OrganizerVenueAndCertService  venueAndCertService;
     private final OrganizerDashboardService    dashboardService;
+    private final EventSportsService           eventSportsService;
 
     public OrganizerController(
             OrganizerService             organizerService,
             OrganizerPeopleService       peopleService,
             OrganizerCommunicationService communicationService,
             OrganizerVenueAndCertService  venueAndCertService,
-            OrganizerDashboardService    dashboardService) {
+            OrganizerDashboardService    dashboardService,
+            EventSportsService           eventSportsService) {
         this.organizerService    = organizerService;
         this.peopleService       = peopleService;
         this.communicationService= communicationService;
         this.venueAndCertService = venueAndCertService;
         this.dashboardService    = dashboardService;
+        this.eventSportsService  = eventSportsService;
     }
 
     // =========================================================================
@@ -76,6 +80,18 @@ public class OrganizerController {
             Authentication auth) {
         return ResponseEntity.ok(
             organizerService.updateEventInfo(eventId, extractUserId(auth), extractRoles(auth), request));
+    }
+
+    // =========================================================================
+    // SPORT LIFECYCLE
+    // =========================================================================
+
+    @PostMapping("/events/{eventId}/sports/{sportId}/submit-approval")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN','ADMINISTRATOR','MANAGER','ORGANIZER')")
+    public ResponseEntity<GetEventSportsDTO> submitSportForApproval(
+            @PathVariable UUID eventId,
+            @PathVariable UUID sportId) {
+        return ResponseEntity.ok(eventSportsService.submitForApproval(sportId, eventId));
     }
 
     // =========================================================================

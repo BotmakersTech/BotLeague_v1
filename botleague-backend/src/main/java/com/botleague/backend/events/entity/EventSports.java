@@ -162,6 +162,9 @@ public class EventSports {
     @Column(name = "registered_teams_count")
     private Integer registeredTeamsCount = 0;
 
+    @Column(name = "bracket_generated", nullable = false)
+    private boolean bracketGenerated = false;
+
     // =========================
     // AUDIT
     // =========================
@@ -309,6 +312,9 @@ public class EventSports {
 
     public Integer getRegisteredTeamsCount() { return registeredTeamsCount; }
     public void setRegisteredTeamsCount(Integer registeredTeamsCount) { this.registeredTeamsCount = registeredTeamsCount; }
+
+    public boolean isBracketGenerated() { return bracketGenerated; }
+    public void setBracketGenerated(boolean bracketGenerated) { this.bracketGenerated = bracketGenerated; }
 
     public LocalDateTime getCreatedAt() { return createdAt; }
     public LocalDateTime getUpdatedAt() { return updatedAt; }
