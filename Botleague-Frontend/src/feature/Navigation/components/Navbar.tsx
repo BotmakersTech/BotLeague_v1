@@ -37,7 +37,7 @@ function IconButton({
       onClick={onClick}
       aria-label={label}
       title={label}
-      className="relative inline-flex h-10 w-10 items-center justify-center rounded-full text-neutral-300 transition-colors hover:bg-white/[0.06] hover:text-white"
+      className="relative inline-flex h-10 w-10 items-center justify-center rounded-full text-white/60 transition-colors hover:bg-white/[0.08] hover:text-white"
     >
       {children}
     </button>
@@ -49,7 +49,7 @@ function NotificationButton({ unreadCount, onClick }: { unreadCount: number; onC
     <IconButton label={`Notifications (${unreadCount} unread)`} onClick={onClick}>
       <BellIcon className="h-5 w-5" />
       {unreadCount > 0 && (
-        <span className="absolute -top-0.5 -right-0.5 flex h-4 w-4 min-w-[1rem] items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white ring-2 ring-[#0e0e10] px-0.5">
+        <span className="absolute -top-0.5 -right-0.5 flex h-4 w-4 min-w-[1rem] items-center justify-center rounded-full bg-[#8C6CFF] text-[10px] font-bold text-white ring-2 ring-[#111111] px-0.5">
           {unreadCount > 99 ? "99+" : unreadCount}
         </span>
       )}
@@ -78,7 +78,7 @@ function CompetitorNavActions({
             <rect x="2" y="4" width="20" height="16" rx="2" />
             <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7" />
           </svg>
-          <span className="absolute -top-0.5 -right-0.5 flex h-4 w-4 min-w-[1rem] items-center justify-center rounded-full bg-[#fa4715] text-[10px] font-bold text-white ring-2 ring-[#0e0e10] px-0.5">
+          <span className="absolute -top-0.5 -right-0.5 flex h-4 w-4 min-w-[1rem] items-center justify-center rounded-full bg-[#8C6CFF] text-[10px] font-bold text-white ring-2 ring-[#111111] px-0.5">
             {pendingInvites > 9 ? "9+" : pendingInvites}
           </span>
         </IconButton>
@@ -123,7 +123,7 @@ function AdminNavActions({ unreadCount }: { unreadCount: number }) {
             onChange={e => setQuery(e.target.value)}
             onBlur={() => { if (!query) setSearchOpen(false) }}
             placeholder="Search…"
-            className="h-9 rounded-lg border border-white/10 bg-white/[0.06] px-3 text-sm text-white placeholder:text-neutral-500 outline-none focus:border-white/20 w-52"
+            className="h-9 rounded-lg border border-white/10 bg-white/[0.08] px-3 text-sm text-white placeholder:text-white/40 outline-none focus:border-[#8C6CFF]/60 focus:bg-white/[0.12] w-52 transition-colors"
           />
         </form>
       ) : (
@@ -171,7 +171,7 @@ function SuperAdminNavActions({ unreadCount }: { unreadCount: number }) {
             onChange={e => setQuery(e.target.value)}
             onBlur={() => { if (!query) setSearchOpen(false) }}
             placeholder="Search…"
-            className="h-9 rounded-lg border border-white/10 bg-white/[0.06] px-3 text-sm text-white placeholder:text-neutral-500 outline-none focus:border-white/20 w-52"
+            className="h-9 rounded-lg border border-white/10 bg-white/[0.08] px-3 text-sm text-white placeholder:text-white/40 outline-none focus:border-[#8C6CFF]/60 focus:bg-white/[0.12] w-52 transition-colors"
           />
         </form>
       ) : (
@@ -227,7 +227,10 @@ export default function Navbar() {
   }, [primaryRole])
 
   return (
-    <header className="flex h-18 shrink-0 items-center justify-between border-b border-white/[0.06] bg-[#0e0e10] px-4 sm:px-6">
+    <header
+      style={{ background: "#111111" }}
+      className="flex h-18 shrink-0 items-center justify-between border-b border-white/[0.08] px-4 sm:px-6"
+    >
       <button
         type="button"
         onClick={() => navigate("/")}

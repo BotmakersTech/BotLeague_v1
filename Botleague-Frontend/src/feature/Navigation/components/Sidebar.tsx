@@ -96,33 +96,36 @@ function SidebarItem({
       className={[
         "group relative flex w-full items-center rounded-xl py-2 transition-colors duration-150",
         collapsed ? "justify-center px-2" : "gap-3 px-3",
-        active ? "bg-white/[0.04]" : "hover:bg-white/[0.05]",
+        active ? "bg-white/20" : "hover:bg-white/10",
       ].join(" ")}
     >
+      {/* Icon bubble */}
       <span
         className={[
           "flex h-9 w-9 shrink-0 items-center justify-center rounded-lg transition-colors duration-150",
           active
-            ? "bg-red-500 text-neutral-950 shadow-[0_0_16px_-3px_rgba(239,68,68,0.7)]"
-            : "text-neutral-400 group-hover:text-[#F44336]",
+            ? "bg-white/25 text-white shadow-[0_0_14px_-2px_rgba(255,255,255,0.35)]"
+            : "text-white/70 group-hover:text-white",
         ].join(" ")}
       >
         {getIcon(item.iconName)}
       </span>
 
+      {/* Label */}
       {!collapsed && (
         <span
           className={[
-            "truncate text-sm font-medium",
-            active ? "text-red-500" : "text-neutral-300 group-hover:text-[#F44336]",
+            "truncate text-sm",
+            active ? "font-semibold text-white" : "font-medium text-white/80 group-hover:text-white",
           ].join(" ")}
         >
           {item.label}
         </span>
       )}
 
+      {/* Collapsed tooltip */}
       {collapsed && (
-        <span className="pointer-events-none absolute left-[calc(100%+12px)] z-50 whitespace-nowrap rounded-md bg-neutral-800 px-2.5 py-1.5 text-xs font-medium text-white opacity-0 shadow-lg ring-1 ring-white/10 transition-opacity duration-150 group-hover:opacity-100">
+        <span className="pointer-events-none absolute left-[calc(100%+12px)] z-50 whitespace-nowrap rounded-md bg-[#111111] px-2.5 py-1.5 text-xs font-medium text-white opacity-0 shadow-lg ring-1 ring-white/10 transition-opacity duration-150 group-hover:opacity-100">
           {item.label}
         </span>
       )}
@@ -161,8 +164,9 @@ export default function Sidebar({ collapsed, onToggle }: SidebarProps) {
     <aside
       onMouseEnter={() => { if (collapsed) onToggle(); }}
       onMouseLeave={() => { if (!collapsed) onToggle(); }}
+      style={{ background: "linear-gradient(160deg, #0162D1 0%, #8C6CFF 100%)" }}
       className={[
-        "flex h-full shrink-0 flex-col border-r border-white/[0.06] bg-[#0e0e10]",
+        "flex h-full shrink-0 flex-col border-r border-white/10",
         "transition-[width] duration-300 ease-in-out",
         collapsed ? "w-[100px]" : "w-[300px]",
       ].join(" ")}
@@ -181,17 +185,17 @@ export default function Sidebar({ collapsed, onToggle }: SidebarProps) {
         ))}
       </nav>
 
-      <div className="border-t border-white/[0.06] p-3">
+      <div className="border-t border-white/20 p-3">
         {collapsed ? (
           <button
             type="button"
             onClick={handleLogout}
             disabled={loggingOut}
             title="Log out"
-            className="group relative flex w-full items-center justify-center rounded-xl p-2.5 text-red-500 transition-colors hover:bg-red-500/10 disabled:opacity-60"
+            className="group relative flex w-full items-center justify-center rounded-xl p-2.5 text-white/80 transition-colors hover:bg-white/20 hover:text-white disabled:opacity-60"
           >
             <LogoutIcon className="h-[18px] w-[18px]" />
-            <span className="pointer-events-none absolute left-[calc(100%+12px)] z-50 whitespace-nowrap rounded-md bg-neutral-800 px-2.5 py-1.5 text-xs font-medium text-white opacity-0 shadow-lg ring-1 ring-white/10 transition-opacity duration-150 group-hover:opacity-100">
+            <span className="pointer-events-none absolute left-[calc(100%+12px)] z-50 whitespace-nowrap rounded-md bg-[#111111] px-2.5 py-1.5 text-xs font-medium text-white opacity-0 shadow-lg ring-1 ring-white/10 transition-opacity duration-150 group-hover:opacity-100">
               Log out
             </span>
           </button>
@@ -200,7 +204,7 @@ export default function Sidebar({ collapsed, onToggle }: SidebarProps) {
             type="button"
             onClick={handleLogout}
             disabled={loggingOut}
-            className="flex w-full items-center justify-center gap-2 rounded-xl bg-red-600 px-4 py-2.5 text-sm font-semibold text-white shadow-[0_6px_20px_-8px_rgba(220,38,38,0.9)] transition-colors hover:bg-red-500 disabled:cursor-not-allowed disabled:opacity-70"
+            className="flex w-full items-center justify-center gap-2 rounded-xl bg-white/20 px-4 py-2.5 text-sm font-semibold text-white shadow-[0_4px_14px_-4px_rgba(0,0,0,0.25)] transition-colors hover:bg-white/30 disabled:cursor-not-allowed disabled:opacity-70"
           >
             <LogoutIcon className="h-[18px] w-[18px]" />
             {loggingOut ? "Logging out..." : "Log out"}

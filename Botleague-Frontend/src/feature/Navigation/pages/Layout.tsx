@@ -8,7 +8,7 @@ export default function Layout() {
   const [collapsed, setCollapsed] = useState(false);
 
   return (
-    <div className="flex h-screen flex-col overflow-hidden bg-[#191919] text-neutral-200">
+    <div className="flex h-screen flex-col overflow-hidden bg-[#FAFAFE] text-[#111111]">
       {/* Full-width top bar */}
       <Navbar />
 
@@ -19,7 +19,7 @@ export default function Layout() {
           onToggle={() => setCollapsed((c) => !c)}
         />
 
-        <main className="min-w-0 flex-1 overflow-y-auto bg-[#191919] ">
+        <main className="min-w-0 flex-1 overflow-y-auto bg-white">
           <Outlet />
         </main>
       </div>
