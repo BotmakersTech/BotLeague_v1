@@ -426,7 +426,6 @@ function SmartSportPanel({
     return (
       <MatchManagementPanelWithMatches
         key={matchKey}
-        sportId={sport.id}
         initialMatches={matches!}
         eventLive={eventLive}
         onReload={loadMatches}
@@ -467,12 +466,10 @@ function SmartSportPanel({
 // ── Match Management Panel (receives already-loaded matches) ──────────────────
 
 function MatchManagementPanelWithMatches({
-  sportId,
   initialMatches,
   eventLive,
   onReload,
 }: {
-  sportId: string;
   initialMatches: OrganizerMatch[];
   eventLive: boolean;
   onReload: () => void;
